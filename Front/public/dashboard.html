@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Basic styling for the video list */
+        .video-item {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .video-item img {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .video-item h3 {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        #searchResults {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<header>
+    <h1>VidStream</h1>
+</header>
+
+<!-- Subscribe Button -->
+<div class="dashboard-actions">
+    <button id="subscribeBtn">Subscribe</button>
+</div>
+
+<!-- Dashboard Actions -->
+<div class="dashboard-actions">
+    <!-- Watchlist Button -->
+    <button id="watchlistBtn">Watchlist</button>
+
+    <!-- Add Video Button -->
+    <button id="addVideoBtn">Add Video</button>
+
+    <!-- Search Bar -->
+    <input type="text" id="searchBar" placeholder="Search videos by title..." oninput="searchVideos()">
+</div>
+
+<!-- Search Results Section -->
+<div id="searchResults"></div>
+
+<!-- All Videos Section -->
+<h2>All Videos</h2>
+<div id="videoList"></div>
+
+<script>
+    // Handle Subscribe button
+    document.getElementById("subscribeBtn").addEventListener("click", async function () {
+        window.location.href = "subscribe.html";
+    });
+
+    // Handle Watchlist button
+    document.getElementById("watchlistBtn").addEventListener("click", function () {
+        window.location.href = "watchList.html";
+    });
+
+    // Handle Add Video button
+    document.getElementById("addVideoBtn").addEventListener("click", function () {
+        window.location.href = "upload.html";
+    });
+
+    // Search for videos by title
+    async function searchVideos() {
+        const searchQuery = document.getElementById("searchBar").value;
+        const searchResultsDiv = document.getElementById("searchResults");
+
+        if (!searchQuery) {
+            searchResultsDiv.innerHTML = '';
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8080/video/by-title?title=${encodeURIComponent(searchQuery)}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                }
+            });
+
+            if (response === 404) {
+                alert("No content found");
+                return;
+            }
+
+            const videos = await response.json();
+            searchResultsDiv.innerHTML = ''; // Clear previous results
+
+            // Display search results
+            videos.forEach(video => {
+                const videoItem = document.createElement("div");
+                videoItem.classList.add('video-item');
+                videoItem.innerHTML = `
+                    <img src="http://localhost:8080/video/thumbnail?path=${encodeURIComponent(video.screen_cap)}" alt="Thumbnail" style="width:150px; height:100px;" onclick="openVideo(${video.id})">
+                    <h3>${video.title}</h3>
+                `;
+                searchResultsDiv.appendChild(videoItem);
+            });
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
+
+    // Fetch all videos
+    async function fetchAllVideos() {
+        const videoListDiv = document.getElementById("videoList");
+
+        try {
+            const response = await fetch("http://localhost:8080/video/all", {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                }
+            });
+
+            if (!response.ok) {
+                alert("Error fetching videos.");
+                return;
+            }
+
+            const videos = await response.json();
+            videoListDiv.innerHTML = ''; // Clear previous video list
+
+            // Display all videos
+            videos.forEach(video => {
+                const videoItem = document.createElement("div");
+                videoItem.classList.add('video-item');
+                videoItem.innerHTML = `
+                    <img src="http://localhost:8080/video/thumbnail?path=${encodeURIComponent(video.screen_cap)}" alt="Thumbnail" style="width:150px; height:100px;" onclick="openVideo(${video.id})">
+                    <h3>${video.title}</h3>
+                `;
+                videoListDiv.appendChild(videoItem);
+            });
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
+
+    // Redirect to the player page with the selected video ID
+    function openVideo(videoId) {
+        window.location.href = `player.html?id=${videoId}`;
+    }
+
+    // Call fetchAllVideos when the page loads
+    fetchAllVideos();
+</script>
+</body>
+</html>

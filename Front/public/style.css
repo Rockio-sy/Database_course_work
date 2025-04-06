@@ -1,0 +1,203 @@
+/* Reset some default styles for consistency */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    flex-direction: column; /* Ensure elements are stacked vertically */
+}
+
+/* Header styling for VidStream */
+header {
+    text-align: center;
+    margin-bottom: 20px; /* Space below the header */
+}
+
+/* Dashboard actions (buttons and search bar) styling */
+.dashboard-actions {
+    display: flex;
+    flex-direction: column; /* Stack the buttons vertically */
+    gap: 10px; /* Add space between buttons */
+    align-items: center; /* Center the buttons */
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Button and input field styling */
+button, input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Search bar styling */
+input[type="text"] {
+    background-color: #fafafa;
+    border: 1px solid #ccc;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #4CAF50;
+    background-color: #fff;
+}
+
+/* Player container styling */
+.player-container {
+    max-width: 800px;
+    margin: 20px auto;
+    text-align: center;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Video player styling */
+video {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+/* Back button styling */
+.back-button {
+    margin-top: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.back-button:hover {
+    background-color: #45a049;
+}
+
+/* Watchlist buttons styling */
+.watchlist-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.watchlist-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#addToWatchlistBtn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#deleteFromWatchlistBtn {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Rating section styling */
+.rating-section {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.rating-section h3 {
+    margin-bottom: 10px;
+}
+
+.rating-stars {
+    font-size: 24px;
+    color: #ffd700; /* Gold color for stars */
+}
+
+.rating-stars .star {
+    cursor: pointer;
+}
+
+.rating-stars .star:hover {
+    color: #ffcc00; /* Lighter gold on hover */
+}
+
+/* Comments section styling */
+.comments-section {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.comments-section h3 {
+    margin-bottom: 10px;
+}
+
+.comments-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
+.comment-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.comment-form button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.comment-form button:hover {
+    background-color: #45a049;
+}

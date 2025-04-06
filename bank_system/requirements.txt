@@ -1,0 +1,4 @@
+Flask==2.3.2
+psycopg2==2.9.6
+bcrypt==4.0.1
+flask-cors==4.0.0  # Add this line

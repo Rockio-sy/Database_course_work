@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Plans</title>
+    <link rel="stylesheet" href="style.css"> <!-- Link to your existing CSS -->
+    <style>
+        /* Additional CSS for the subscription page */
+        .subscription-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .subscription-plan {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .subscription-plan:hover {
+            transform: scale(1.05);
+        }
+
+        .subscription-plan h2 {
+            margin-bottom: 10px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .subscription-plan p {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .subscription-plan .price {
+            font-size: 30px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .subscription-plan button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .subscription-plan button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<header>
+    <h1>VidStream</h1>
+</header>
+
+<!-- Subscription Plans -->
+<div class="subscription-container">
+    <!-- Plus Plan -->
+    <div class="subscription-plan">
+        <h2>Plus</h2>
+        <p>Unlimited videos to watch</p>
+        <p>Watch List</p>
+        <div class="price">$100.00/month</div>
+        <button onclick="redirectToSubscribe('Plus')">Choose Plus</button>
+    </div>
+
+    <!-- Premium Plan -->
+    <div class="subscription-plan">
+        <h2>Premium</h2>
+        <p>Unlimited videos to watch</p>
+        <p>Watch List</p>
+        <p>Rating</p>
+        <p>Video review && Feedback</p>
+        <div class="price">$150.00/month</div>
+        <button onclick="redirectToSubscribe('Premium')">Choose Premium</button>
+    </div>
+
+    <div class="subscription-plan">
+        <button onclick="goBack()">Cancel</button>
+    </div>
+
+</div>
+
+<script>
+    // Function to redirect to the subscription page
+    function redirectToSubscribe(plan) {
+        // Redirect to the respective subscription page
+        window.location.href = "payment.html";
+    }
+
+    function goBack() {
+        window.location.href = "dashboard.html";
+    }
+</script>
+</body>
+</html>

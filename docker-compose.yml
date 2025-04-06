@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: /home/rockio/buman/DB_course_work/vidstream
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-vidstream
+    volumes:
+      - video-storage:/var/project_videos
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-vidstream:5432/vidstream
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+
+  frontend:
+    build:
+      context: /home/rockio/buman/DB_course_work/Front
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_BACKEND_URL: http://backend:8080
+
+  bank-server:
+    build:
+      context: /home/rockio/buman/DB_course_work/bank_system
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres-banko
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-banko:5432/banko
+
+  postgres-vidstream:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vidstream
+    volumes:
+      - postgres-vidstream-data:/var/lib/postgresql/data
+
+  postgres-banko:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: banko
+    volumes:
+      - postgres-banko-data:/var/lib/postgresql/data
+
+volumes:
+  video-storage:
+  postgres-vidstream-data:
+  postgres-banko-data:

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Additional styles for the upload form */
+        .upload-container {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .upload-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .upload-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            text-align: left;
+        }
+
+        .upload-container input[type="text"],
+        .upload-container textarea,
+        .upload-container input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: #fafafa;
+        }
+
+        .upload-container textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .upload-container input[type="file"] {
+            padding: 8px;
+        }
+
+        .upload-container button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            margin-top: 10px;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .upload-container button:hover {
+            background-color: #45a049;
+        }
+
+        .upload-container .message {
+            margin-top: 10px;
+            color: green;
+            font-weight: bold;
+        }
+
+        .upload-container .error {
+            margin-top: 10px;
+            color: red;
+            font-weight: bold;
+        }
+
+        .upload-container .clear-button {
+            background-color: #f44336;
+        }
+
+        .upload-container .clear-button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<header>
+    <h1>VidStream</h1>
+</header>
+
+<!-- Upload Form -->
+<div class="upload-container">
+    <h2>Upload Video</h2>
+    <form id="uploadForm">
+        <!-- Video Title -->
+        <label for="title">Video Title:</label>
+        <input type="text" id="title" name="title" required>
+
+        <!-- Video Description -->
+        <label for="description">Video Description:</label>
+        <textarea id="description" name="description" rows="4"></textarea>
+
+        <!-- Video File Upload -->
+        <label for="videoFile">Select Video File:</label>
+        <input type="file" id="videoFile" name="videoFile" accept="video/*" required>
+        <button type="button" id="uploadFileBtn">Upload File</button>
+        <div id="uploadMessage" class="message"></div>
+
+        <!-- Post Button -->
+        <button type="submit" id="postBtn">Post</button>
+
+        <!-- Clear Temporary Memory Button -->
+        <button type="button" id="clearTempBtn" class="clear-button">Clear Temporary Memory</button>
+        <button type="button" id="cancel" class="clear-button">Cancel</button>
+    </form>
+</div>
+
+<script>
+    let tempFilePath = null; // Store the temporary file path after upload
+
+    // Handle Upload File button
+    document.getElementById("uploadFileBtn").addEventListener("click", async function () {
+        const videoFile = document.getElementById("videoFile").files[0];
+        if (!videoFile) {
+            alert("Please select a video file.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", videoFile);
+
+        try {
+            const uploadResponse = await fetch("http://localhost:8080/video/upload", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                },
+                body: formData,
+            });
+
+            if (!uploadResponse.ok) {
+                const errorData = await uploadResponse.json();
+                throw new Error("Failed to upload video file, try to delete the temporary memory.");
+            }
+
+            tempFilePath = await uploadResponse.text(); // Store the temporary file path
+            document.getElementById("uploadMessage").textContent = "File uploaded successfully!";
+            document.getElementById("uploadMessage").className = "message";
+        } catch (error) {
+            document.getElementById("uploadMessage").textContent = "Error: " + error.message;
+            document.getElementById("uploadMessage").className = "error";
+        }
+    });
+
+    // Handle Post button
+    document.getElementById("uploadForm").addEventListener("submit", async function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        if (!tempFilePath) {
+            alert("Please upload a video file first.");
+            return;
+        }
+
+        const title = document.getElementById("title").value;
+        const description = document.getElementById("description").value;
+        // const userId = JSON.parse(localStorage.getItem("user")).id; // Get user ID from localStorage
+
+        const videoDTO = {
+            title: title,
+            description: description,
+            path: tempFilePath,
+            screenCap: "/var/project_videos/screenCast.png", // Optional field
+        };
+
+        try {
+            const postResponse = await fetch("http://localhost:8080/video/post", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                },
+                body: JSON.stringify(videoDTO),
+            });
+
+            if (!postResponse.ok) {
+                const errorData = await postResponse.json();
+                throw new Error(errorData.message || "Failed to post video.");
+            }
+
+            const result = await postResponse.json();
+            alert("Video posted successfully!");
+            window.location.href = "dashboard.html";
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    });
+
+    // Handle Clear Temporary Memory button
+    document.getElementById("clearTempBtn").addEventListener("click", async function () {
+        try {
+            const clearResponse = await fetch("http://localhost:8080/video/clear", {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                },
+            });
+
+            if (!clearResponse.ok) {
+                const errorData = await clearResponse.json();
+                throw new Error(errorData.message || "Failed to clear temporary memory.");
+            }
+
+            tempFilePath = null; // Reset the temporary file path
+            document.getElementById("uploadMessage").textContent = "Temporary memory cleared!";
+            document.getElementById("uploadMessage").className = "message";
+        } catch (error) {
+            document.getElementById("uploadMessage").textContent = "Error: " + error.message;
+            document.getElementById("uploadMessage").className = "error";
+        }
+    });
+
+    document.getElementById("cancel").addEventListener("click", async function () {
+        try {
+            const clearResponse = await fetch("http://localhost:8080/video/clear", {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                },
+            });
+
+            if (!clearResponse.ok) {
+                const errorData = await clearResponse.json();
+                throw new Error(errorData.message || "Failed to clear temporary memory.");
+            }
+
+            tempFilePath = null; // Reset the temporary file path
+            document.getElementById("uploadMessage").textContent = "Temporary memory cleared!";
+            document.getElementById("uploadMessage").className = "message";
+            window.location.href = "dashboard.html";
+        } catch (error) {
+            document.getElementById("uploadMessage").textContent = "Error: " + error.message;
+            document.getElementById("uploadMessage").className = "error";
+        }
+    });
+</script>
+</body>
+</html>

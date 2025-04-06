@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchlist</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Basic styling for the video list */
+        .video-item {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .video-item img {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .video-item h3 {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        /* Styling for the upgrade message */
+        .upgrade-message {
+            background-color: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 400px;
+            text-align: center;
+            color: #c62828;
+        }
+        .upgrade-message button {
+            background-color: #c62828;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .upgrade-message button:hover {
+            background-color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<header>
+    <h1>Watch list</h1>
+</header>
+
+<!-- Back to Dashboard Button -->
+<div class="dashboard-actions">
+    <button id="backToDashboardBtn">Back to Dashboard</button>
+</div>
+
+<!-- Watchlist Videos Section -->
+<br><h2>Saved videos</h2>
+<div id="watchlistVideos"></div>
+
+<!-- Upgrade Message (hidden by default) -->
+<div id="upgradeMessage" class="upgrade-message" style="display: none;">
+    <p>You need to upgrade your plan to access this content.</p>
+    <button onclick="redirectToPlans()">Upgrade Plan</button>
+</div>
+
+<script>
+    // Handle Back to Dashboard button
+    document.getElementById("backToDashboardBtn").addEventListener("click", function () {
+        window.location.href = "dashboard.html";
+    });
+
+    // Fetch all videos in the watchlist
+    async function fetchWatchlistVideos() {
+        const watchlistVideosDiv = document.getElementById("watchlistVideos");
+        const upgradeMessageDiv = document.getElementById("upgradeMessage");
+
+        try {
+            const response = await fetch("http://localhost:8080/wl/get", {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                }
+            });
+
+            if (response.status === 403) {
+                // Show the upgrade message if the user doesn't have access
+                upgradeMessageDiv.style.display = "block";
+                watchlistVideosDiv.innerHTML = ""; // Clear the video list
+                return;
+            }
+
+            if (!response.ok) {
+                alert("Error fetching watchlist videos.");
+                return;
+            }
+
+            const videos = await response.json();
+            watchlistVideosDiv.innerHTML = ''; // Clear previous video list
+
+            // Display watchlist videos
+            videos.forEach(video => {
+                const videoItem = document.createElement("div");
+                videoItem.classList.add('video-item');
+                videoItem.innerHTML = `
+                    <img src="http://localhost:8080/video/thumbnail?path=${encodeURIComponent(video.screen_cap)}" alt="Thumbnail" style="width:150px; height:100px;" onclick="openVideo(${video.id})">
+                    <h3>${video.title}</h3>
+                `;
+                watchlistVideosDiv.appendChild(videoItem);
+            });
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
+
+    // Redirect to the player page with the selected video ID
+    function openVideo(videoId) {
+        window.location.href = `player.html?id=${videoId}`;
+    }
+
+    // Redirect to the plans page
+    function redirectToPlans() {
+        window.location.href = "plans.html"; // Replace with your plans page URL
+    }
+
+    // Call fetchWatchlistVideos when the page loads
+    fetchWatchlistVideos();
+</script>
+</body>
+</html>

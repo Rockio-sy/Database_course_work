@@ -1,0 +1,2 @@
+ALTER TABLE video ADD COLUMN screen_cap TEXT DEFAULT '1';
+ALTER TABLE video ALTER COLUMN screen_cap SET NOT NULL;

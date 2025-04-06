@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h2>Login</h2>
+<form id="loginForm">
+    <label for="username">Username:</label>
+    <input type="text" id="username" required>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" required>
+
+    <button type="submit">Login</button>
+</form>
+
+<p>Don't have an account? <a href="register.html">Register here</a></p>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        console.log("HERE BEFORE TRY");
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            console.log("HERE AFTER IF");
+            const response = await fetch("http://localhost:8080/auth/login?username=" + encodeURIComponent(username) + "&password=" + encodeURIComponent(password), {
+                method: "POST"
+            });
+
+            console.log("Response headers:", response.headers); // Debugging: Log all headers
+
+            if (response.ok) {
+                const token = response.headers.get("Authorization"); // Extract JWT token
+
+                if (token) {
+                    localStorage.setItem("jwtToken", token.split(" ")[1]); // Store JWT token
+                    alert("Login successful! Redirecting...");
+                    window.location.href = "dashboard.html";
+                } else {
+                    console.error("No token received from the server.");
+                    alert("No token received from the server.");
+                }
+            } else {
+                if (response.status === 401) {
+                    alert("Invalid username or password.");
+                } else {
+                    alert("Login failed. Please try again later.");
+                }
+            }
+        } catch (error) {
+            console.error("Error logging in:", error);
+            alert("Error logging in: " + error.message);
+        }
+    });
+</script>
+</body>
+</html>

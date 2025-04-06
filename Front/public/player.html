@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player</title>
+    <link rel="stylesheet" href="style.css"> <!-- Link to your CSS file -->
+    <style>
+        /* Styling for the upgrade message */
+        .upgrade-message {
+            background-color: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 400px;
+            text-align: center;
+            color: #c62828;
+        }
+        .upgrade-message button {
+            background-color: #c62828;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .upgrade-message button:hover {
+            background-color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+<div class="player-container">
+    <h1>Stream room</h1>
+    <video id="videoPlayer" controls>
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Watchlist Buttons -->
+    <div class="watchlist-buttons">
+        <button id="addToWatchlistBtn">Add to Watchlist</button>
+        <button id="deleteFromWatchlistBtn">Delete from Watchlist</button>
+    </div>
+
+    <!-- Rating Section -->
+    <div class="rating-section">
+        <h3>Rating</h3>
+        <div class="rating-stars" id="ratingStars">
+            <span class="star" data-value="1">&#9733;</span>
+            <span class="star" data-value="2">&#9733;</span>
+            <span class="star" data-value="3">&#9733;</span>
+            <span class="star" data-value="4">&#9733;</span>
+            <span class="star" data-value="5">&#9733;</span>
+        </div>
+        <p id="averageRating">Average Rating: Loading...</p>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section">
+        <h3>Comments</h3>
+        <div class="comments-list" id="commentsList">
+            <!-- Comments will be dynamically added here -->
+        </div>
+        <form class="comment-form" id="commentForm">
+            <textarea id="commentInput" placeholder="Write a comment..." required></textarea>
+            <button type="submit">Submit Comment</button>
+        </form>
+    </div>
+
+    <!-- Upgrade Message (hidden by default) -->
+    <div id="upgradeMessage" class="upgrade-message" style="display: none;">
+        <p>You need to upgrade your plan to rate or comment on videos.</p>
+        <button onclick="redirectToPlans()">Upgrade Plan</button>
+    </div>
+
+    <!-- Cancel Button -->
+    <button id="cancel">Cancel</button>
+</div>
+
+<script>
+    // Get the video ID from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const videoId = urlParams.get('id');
+
+    if (!videoId) {
+        alert("Video ID is missing in the URL.");
+    } else {
+        // Fetch the video stream
+        async function fetchVideoStream() {
+            try {
+                const response = await fetch(`http://localhost:8080/video/stream?videoId=${videoId}`, {
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the JWT token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch video: ${response.status} ${response.statusText}`);
+                }
+
+                // Convert the response to a blob and set it as the video source
+                const blob = await response.blob();
+                const videoPlayer = document.getElementById("videoPlayer");
+                videoPlayer.src = URL.createObjectURL(blob);
+            } catch (error) {
+                console.error("Error fetching video stream:", error);
+                alert("Error fetching video stream. Please check the console for details.");
+            }
+        }
+
+        // Fetch and display the average rating
+        async function fetchAverageRating() {
+            try {
+                const response = await fetch(`http://localhost:8080/rate/get?videoId=${videoId}`, {
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch ratings.");
+                }
+
+                const ratings = await response.json();
+                const totalRatings = ratings.length;
+                const sumRatings = ratings.reduce((sum, rating) => sum + rating.rateValue, 0);
+                const averageRating = totalRatings > 0 ? (sumRatings / totalRatings).toFixed(1) : 0;
+
+                document.getElementById("averageRating").textContent = `Average Rating: ${averageRating}/5`;
+            } catch (error) {
+                console.error("Error fetching average rating:", error);
+                document.getElementById("averageRating").textContent = "Average Rating: Unavailable";
+            }
+        }
+
+        // Handle star rating
+        const ratingStars = document.getElementById("ratingStars");
+        ratingStars.addEventListener("click", async function (event) {
+            if (event.target.classList.contains("star")) {
+                const rateValue = event.target.getAttribute("data-value");
+
+                try {
+                    const response = await fetch(`http://localhost:8080/rate/set`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                        },
+                        body: JSON.stringify({
+                            videoId: parseInt(videoId),
+                            rateValue: parseInt(rateValue),
+                            comments: "" // Optional: Add comments if needed
+                        }),
+                    });
+
+                    if (response.status === 403) {
+                        // Show the upgrade message if the user doesn't have access
+                        document.getElementById("upgradeMessage").style.display = "block";
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error("Failed to submit rating.");
+                    }
+
+                    alert("Rating submitted successfully!");
+                    fetchAverageRating(); // Refresh the average rating
+                } catch (error) {
+                    alert("Error: " + error.message);
+                }
+            }
+        });
+
+        // Fetch and display comments
+        async function fetchComments() {
+            try {
+                const response = await fetch(`http://localhost:8080/rate/get?videoId=${videoId}`, {
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch comments.");
+                }
+
+                const ratings = await response.json();
+                const commentsList = document.getElementById("commentsList");
+                commentsList.innerHTML = ''; // Clear previous comments
+
+                ratings.forEach(rating => {
+                    if (rating.comments) {
+                        const commentItem = document.createElement("div");
+                        commentItem.classList.add("comment-item");
+                        commentItem.innerHTML = `
+                            <strong>User ${rating.userId}:</strong> ${rating.comments}
+                        `;
+                        commentsList.appendChild(commentItem);
+                    }
+                });
+            } catch (error) {
+                console.error("Error fetching comments:", error);
+                document.getElementById("commentsList").innerHTML = "Failed to load comments.";
+            }
+        }
+
+        // Handle comment submission
+        document.getElementById("commentForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const commentInput = document.getElementById("commentInput");
+            const commentText = commentInput.value.trim();
+
+            if (!commentText) {
+                alert("Please write a comment.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8080/rate/set`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                    },
+                    body: JSON.stringify({
+                        videoId: parseInt(videoId),
+                        rateValue: 0, // Optional: Set a default rating
+                        comments: commentText
+                    }),
+                });
+
+                if (response.status === 403) {
+                    // Show the upgrade message if the user doesn't have access
+                    document.getElementById("upgradeMessage").style.display = "block";
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error("Failed to submit comment.");
+                }
+
+                alert("Comment submitted successfully!");
+                commentInput.value = ''; // Clear the input
+                fetchComments(); // Refresh the comments
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        });
+
+        // Handle Add to Watchlist button
+        document.getElementById("addToWatchlistBtn").addEventListener("click", async function () {
+            try {
+                const response = await fetch(`http://localhost:8080/wl/add?videoId=${videoId}`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to add video to watchlist.");
+                }
+
+                alert("Video added to watchlist!");
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        });
+
+        // Handle Delete from Watchlist button
+        document.getElementById("deleteFromWatchlistBtn").addEventListener("click", async function () {
+            try {
+                const response = await fetch(`http://localhost:8080/wl/delete?videoId=${videoId}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to delete video from watchlist.");
+                }
+
+                alert("Video removed from watchlist!");
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        });
+
+        // Fetch video stream, average rating, and comments when the page loads
+        fetchVideoStream();
+        fetchAverageRating();
+        fetchComments();
+    }
+
+    // Handle Cancel button
+    document.getElementById("cancel").addEventListener("click", function () {
+        window.location.href = "dashboard.html";
+    });
+
+    // Redirect to the plans page
+    function redirectToPlans() {
+        window.location.href = "subscribe.html"; // Replace with your plans page URL
+    }
+</script>
+</body>
+</html>

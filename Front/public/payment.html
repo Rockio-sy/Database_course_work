@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Payment</title>
+    <link rel="stylesheet" href="style.css"> <!-- Link to your existing CSS -->
+    <style>
+        /* Additional CSS for the payment form */
+        .payment-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .payment-form {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .payment-form h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+        }
+
+        .payment-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .payment-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .payment-form button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .payment-form button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<header>
+    <h1>VidStream</h1>
+</header>
+
+<!-- Payment Form -->
+<div class="payment-container">
+    <div class="payment-form">
+        <h2>Enter Card Details</h2>
+        <form id="paymentForm">
+            <label for="cardNumber">Card Number</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required>
+
+            <label for="expiryDate">Expiry Date</label>
+            <input type="text" id="expiryDate" placeholder="MM/YY" required>
+
+            <label for="cvv">CVV</label>
+            <input type="text" id="cvv" placeholder="123" required>
+
+            <button type="button" onclick="processPayment('Plus')">Pay for Plus Plan</button>
+            <button type="button" onclick="processPayment('Premium')">Pay for Premium Plan</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Function to process payment
+    async function processPayment(plan) {
+        // Get card details (for display purposes only, not sent to the server)
+        const cardNumber = document.getElementById("cardNumber").value;
+        const expiryDate = document.getElementById("expiryDate").value;
+        const cvv = document.getElementById("cvv").value;
+
+        // Validate card details (basic validation)
+        if (!cardNumber || !expiryDate || !cvv) {
+            alert("Please fill in all card details.");
+            return;
+        }
+
+        // Determine the endpoint based on the selected plan
+        const endpoint = plan === "Plus" ? "/plan/plus" : "/plan/premium";
+
+        try {
+            // Send a request to the backend endpoint
+            const response = await fetch(`http://localhost:8080${endpoint}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("jwtToken")}` // Include the token
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("Payment failed. Please try again.");
+            }
+
+            const result = await response.text();
+            alert(result); // Show success message
+            window.location.href = "dashboard.html"; // Redirect to dashboard after payment
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
+</script>
+</body>
+</html>
